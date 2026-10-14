@@ -11,6 +11,13 @@ from helpers import KINDS, DemoDb, seeded
 from idempotent_backfill_kit.engines import Engine, EngineKind, connect
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    """Create the git-ignored parent of --basetemp, missing on a fresh checkout."""
+    basetemp = config.option.basetemp
+    if basetemp:
+        Path(basetemp).parent.mkdir(parents=True, exist_ok=True)
+
+
 @pytest.fixture(params=KINDS)
 def kind(request: pytest.FixtureRequest) -> EngineKind:
     """Engine kind under test."""
