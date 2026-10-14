@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "idempotent-backfill-kit"
+version = "0.1.0"
+description = "Makes re-running a pipeline safe (no duplicates, no gaps), so a 2am rerun never corrupts the warehouse."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = ["duckdb>=1.4,<2"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-timeout>=2.3", "ruff>=0.6", "mypy>=1.11", "pip-audit>=2.7"]
+
+[project.scripts]
+ibk = "idempotent_backfill_kit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = "--basetemp=.tmp/pytest -p no:cacheprovider"
+timeout = 600
+
+[tool.ruff]
+line-length = 100
+extend-exclude = [".tmp", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "RUF", "N", "C4", "PT", "RET", "PIE", "PERF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Table and column names are validated against a strict identifier pattern before they are
+# placed in SQL; every value is a bound parameter.
+"src/**" = ["S608"]
+"tests/**" = ["S101", "S311", "S603", "S608"]
+# Seeded generators for reproducible demo data and scenario choice, not security.
+"src/idempotent_backfill_kit/{demo,bench}.py" = ["S311"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests", "scripts"]

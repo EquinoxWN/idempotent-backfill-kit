@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: the workflow can read the code and nothing else.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Every action is pinned to a full commit SHA; Dependabot proposes updates.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install (exact versions from constraints.txt)
+        run: make setup
+      - name: Lint (ruff, ruff format, mypy --strict)
+        run: make lint
+      - name: Tests (both engines, crash and rerun scenarios)
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest -q -rs 2>&1 | tee pytest.log
+          echo "::notice title=pytest::$(tail -n 1 pytest.log)"
+      - name: Benchmark (every pattern, both engines, plus the anti-pattern baseline)
+        shell: bash
+        run: |
+          set -o pipefail
+          ibk bench --json bench.json | tee bench.log
+          echo "::notice title=bench::$(grep '^RESULT' bench.log)"
+          { echo '```'; cat bench.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: DuckDB index after an unclean exit (ADR 0004, informational)
+        run: make repro
+      - name: Failing output as an annotation (logs need signing in)
+        if: failure()
+        shell: bash
+        run: |
+          for f in pytest.log bench.log; do
+            [ -f "$f" ] && tail -n 30 "$f" | python3 -c "import sys; print('::error title=$f (last lines)::' + sys.stdin.read().replace('%', '%25').replace('\r', '').replace('\n', '%0A'))"
+          done
+          exit 0
+      - name: Known-vulnerability audit
+        run: make audit

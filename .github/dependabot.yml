@@ -1,0 +1,13 @@
+# Update pull requests are paused so the repository keeps a single main branch; CI audits dependencies on every push.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
