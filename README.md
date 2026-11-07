@@ -154,6 +154,7 @@ Full numbers and commands: [docs/results/m1.md](docs/results/m1.md).
 | Check | Result |
 |---|---|
 | Tests (`make test`) | **182 passed**, 0 failed, 0 skipped (Windows 11, Python 3.14, DuckDB 1.5.6, SQLite 3.50.4) |
+| Quality check (10 rules, 12 mutants) | 12 of 12 killed, see [docs/quality/2026-11-01.md](docs/quality/2026-11-01.md) |
 | Benchmark (`make bench`) | **82 scenarios, 0 defects** on 31,476 source rows per engine (30,000 unique events, 30 days) |
 | Reruns of unchanged input | MERGE: 0 inserted, 0 updated; dedup insert: 0 inserted; overwrite: 150 deleted and 150 inserted (by design) |
 | After a crash or a killed process | the ledger lists exactly the partitions whose data is visible, in all 32 crash scenarios |

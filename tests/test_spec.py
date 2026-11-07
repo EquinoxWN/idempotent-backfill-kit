@@ -98,6 +98,8 @@ def test_partition_range_is_inclusive_and_bounded() -> None:
     with pytest.raises(SpecError, match="at most"):
         partition_range("1990-01-01", "2026-01-01")
     assert len(partition_range("2000-01-01", "2027-05-18")) == MAX_PARTITIONS
+    with pytest.raises(SpecError, match="10001 partitions requested"):
+        partition_range("2000-01-01", "2027-05-19")
 
 
 def test_partition_lists_must_be_unique_and_non_empty() -> None:
